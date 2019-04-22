@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>C:/Users/MICHAEL/Pictures/LifeFrame/1.jpg</file>
+        <file>C:/Users/MICHAEL/Pictures/LifeFrame/2.jpg</file>
+        <file>C:/Users/MICHAEL/Pictures/LifeFrame/3.jpg</file>
+        <file>C:/Users/MICHAEL/Pictures/Capture.PNG</file>
+    </qresource>
+</RCC>
