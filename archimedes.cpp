@@ -1,27 +1,29 @@
 #include "archimedes.h"
 #include "ui_archimedes.h"
 
-double Archimedes::DBcalVal = 0.0;
+double Database::DBcalVal = 0.0;
 
 Archimedes::Archimedes(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::Archimedes)
 {
     ui->setupUi(this);
-    openDB();
+    mDatabase = std::make_shared<Database>();
+
+    mDatabase->openDB();
      QFile mFile;
      mFile.setFileName("latestAnswer.db");
 
      if(!mFile.exists())
      {
-         createDB();
+         mDatabase->createDB();
      }
 
-     retrieveFromDB();
+     //retrieving data asyncronously
+     std::async(std::launch::async, &Archimedes::setScreen, this);
 
 
-
-    ui->Display->setText(QString::number(DBcalVal));
+    ui->Display->setText(QString::number(mDatabase->DBcalVal));
 
     QPushButton* numButtons[10];
 
@@ -32,6 +34,7 @@ Archimedes::Archimedes(QWidget *parent) :
         connect(numButtons[i], SIGNAL(released()), this, SLOT(NumPressed()));
     }
 
+    connect(ui->Point, SIGNAL(released()), this, SLOT(PointPressed()));
     connect(ui->Add, SIGNAL(released()), this, SLOT(MathButtonPressed()));
     connect(ui->Multiply, SIGNAL(released()), this, SLOT(MathButtonPressed()));
     connect(ui->Subtract, SIGNAL(released()), this, SLOT(MathButtonPressed()));
@@ -48,7 +51,6 @@ Archimedes::Archimedes(QWidget *parent) :
 //---------------------------------------------------
 Archimedes::~Archimedes()
 {
-    sqlite3_close(db);
     delete ui;
 }
 //---------------------------------------------------
@@ -77,10 +79,22 @@ void Archimedes::NumPressed()
     else
     {
         QString newVal = displayVal + butVal;
-        double dblNewVal = newVal.toDouble();
-        ui->Display->setText(QString::number(dblNewVal,'g',16));
+       // double dblNewVal = newVal.toDouble();
+       // ui->Display->setText(QString::number(dblNewVal,'g',16));
+        ui->Display->setText(newVal);
     }
         equalTrigger = false;
+}
+//---------------------------------------------------
+//---------------------------------------------------
+void Archimedes::PointPressed()
+{
+    auto val = ui->Display->text();
+    QPushButton* button = qobject_cast<QPushButton*>(sender());
+    auto butVal = button->text();
+
+    auto newVal = val + butVal;
+     ui->Display->setText(newVal);
 }
 //---------------------------------------------------
 //---------------------------------------------------
@@ -123,7 +137,6 @@ void Archimedes::MathButtonPressed()
     }
     ui->statusBar->showMessage(statusMessage + "  " + butVal);
     ui->Display->setText("");
-
 }
 //---------------------------------------------------
 //---------------------------------------------------
@@ -153,7 +166,9 @@ void Archimedes::EqualButtonPressed()
         }
         ui->statusBar->clearMessage();
         ui->Display->setText(QString::number(solution));
-        insertIntoDB(solution);
+
+        std::thread t(&Database::insertIntoDB, std::ref(solution));
+        thread_guard tg(t);
     }
 }
 //---------------------------------------------------
@@ -203,84 +218,14 @@ void Archimedes::MemClearPressed()
 }
 //---------------------------------------------------
 //---------------------------------------------------
-void Archimedes::openDB()
+
+void Archimedes::setScreen()
 {
-    rc = sqlite3_open("latestAnswer.db", &db);
-
-    if (rc) {
-            qDebug() << "can't open database: " << sqlite3_errmsg(db)<<endl;
-            return;
-    }
-    else {
-            qDebug() << "Opened database successfully" << endl;
-    }
+    mDatabase->retrieveFromDB();
+    ui->Display->setText(QString::number(mDatabase->DBcalVal));
 }
 //---------------------------------------------------
 //---------------------------------------------------
-void Archimedes::createDB(){
-
-  sql =  "CREATE TABLE LATEST(" \
-         "ID INT PRIMARY KEY NOT NULL," \
-         "ANSWER REAL NOT NULL );";
-
-  rc = sqlite3_exec(db, sql, callbacks, nullptr, &zErrMsg);
-   if (rc != SQLITE_OK) {
-     qDebug() << "SQL Error: " << zErrMsg<<endl;
-   }
-   else {
-     qDebug() << "DB created successfully" << endl;
-   }
-
-
-  std::string val_to_store_STDstring = "INSERT INTO LATEST(ID, ANSWER) VALUES (1, 0)";
-
-  sql = val_to_store_STDstring.c_str();
-  rc = sqlite3_exec(db, sql, callbacks, (void*)data, &zErrMsg);
-
-   if (rc != SQLITE_OK) {
-     qDebug() << "SQL Error: " << zErrMsg<<endl;
-   }
-   else {
-     qDebug() << "inserted successfully" << endl;
-   }
-}
-//---------------------------------------------------
-//---------------------------------------------------
-void Archimedes::insertIntoDB(double& soln){
-
-  auto val_to_store = QString::number(soln);
-
-  std::string val_to_store_STDstring = "UPDATE LATEST set ANSWER = " + val_to_store.toStdString() + " where ID = 1;";
-  sql = val_to_store_STDstring.c_str();
-
-  rc = sqlite3_exec(db, sql, callbacks, nullptr, &zErrMsg);
-
-  if (rc != SQLITE_OK) {
-       qDebug() << "SQL Error: " << zErrMsg<<endl;
-                  }
-  else {
-       qDebug() << "inserted successfully" << endl;
-   }
-}
-//---------------------------------------------------
-//---------------------------------------------------
-void Archimedes::retrieveFromDB(){
-    sql = "SELECT * from LATEST";
-
-    rc = sqlite3_exec(db, sql, callbacks, nullptr, &zErrMsg);
-
-    if (rc != SQLITE_OK) {
-     qDebug() << "SQL Error: " << zErrMsg<<endl;
-     }
-    else {
-     qDebug() << "Operation done successfully" << endl;
-     }
-
-}
-//---------------------------------------------------
-//---------------------------------------------------
-
-
 
 
 

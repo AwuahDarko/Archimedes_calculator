@@ -2,11 +2,14 @@
 #define ARCHIMEDES_H
 
 #include <QMainWindow>
-#include <sqlite3.h>
 #include <QDebug>
 #include <string>
 #include <QFile>
-
+#include <thread>
+#include "thread_guard.h"
+#include "database.h"
+#include <memory>
+#include <future>
 
 
 namespace Ui {
@@ -21,26 +24,9 @@ class Archimedes : public QMainWindow
 public:
     explicit Archimedes(QWidget *parent = nullptr);
     ~Archimedes();
-    static int callbacks(void* data, int num_of_cols, char** fields_in_rows, char** col_names)
-    {
-        data = nullptr;
-        const char* val = fields_in_rows[1];
-        if(val != nullptr)
-        {
-         QString str{val};
-         DBcalVal = str.toDouble();
-        }
-        else {
-            DBcalVal = 0.0;
-        }
+    void setScreen();
 
-        return 0;
-    }
 
-    void createDB();
-    void insertIntoDB(double& soln);
-    void retrieveFromDB();
-    void openDB();
 private slots:
      void NumPressed();
      void MathButtonPressed();
@@ -51,11 +37,11 @@ private slots:
      void MemAddPressed();
      void MemGetPressed();
      void MemClearPressed();
+     void PointPressed();
 
 private:
     Ui::Archimedes *ui;
     double calVal = 0.0;
-    static double DBcalVal;
     bool divTrigger = false;
     bool addTrigger = false;
     bool subTrigger = false;
@@ -64,13 +50,7 @@ private:
     double memory = 0.0;
     bool first_key_press = false;
 
-    sqlite3* db;
-    char* zErrMsg = nullptr ;
-    int rc;
-    const char* sql;
-    const char* data = "callback called";
-
-
+    std::shared_ptr<Database> mDatabase;
 };
 
 #endif // ARCHIMEDES_H

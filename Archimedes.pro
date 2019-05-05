@@ -29,12 +29,16 @@ SOURCES += \
         archimedes.cpp \
     archimedes.cpp \
     main.cpp \
-    strfromdb.cpp
+    strfromdb.cpp \
+    thread_guard.cpp \
+    database.cpp
 
 HEADERS += \
         archimedes.h \
     archimedes.h \
-    strfromdb.h
+    strfromdb.h \
+    thread_guard.h \
+    database.h
 
 FORMS += \
         archimedes.ui
