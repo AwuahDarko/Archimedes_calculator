@@ -1,1 +1,7 @@
 /res
+test.db
+latestAnswer.db
+strfromdb.h
+strfromdb.cpp
+strfromdb.h.autosave
+strfromdb.cpp.autosave

@@ -28,11 +28,13 @@ SOURCES += \
         main.cpp \
         archimedes.cpp \
     archimedes.cpp \
-    main.cpp
+    main.cpp \
+    strfromdb.cpp
 
 HEADERS += \
         archimedes.h \
-    archimedes.h
+    archimedes.h \
+    strfromdb.h
 
 FORMS += \
         archimedes.ui
@@ -49,3 +51,9 @@ DISTFILES += \
     res/1.jpg \
     res/2.jpg \
     res/3.jpg
+
+
+win32: LIBS += -LC:/sqlitex64/source/ -lsqlite3
+
+INCLUDEPATH += C:/sqlitex64/source
+DEPENDPATH += C:/sqlitex64/source
